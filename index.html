@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NIT Warangal Live Map</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet CSS -->
+  <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" /> -->
+  <link rel="stylesheet" href="./leaflet.css" />
+
+  <style>
+    *{
+      margin: 0;
+    }
+    #map {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<!-- <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script> -->
+<script src="./leaflet.js"></script>
+<script>
+  // Initialize the map and set view to NIT Warangal coordinates
+  const map = L.map('map').setView([17.9811, 79.5300], 17); // NIT Warangal approx
+
+  // Add OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+    // const svgOverlay = L.imageOverlay('./map-svg.svg', [
+    //   [17.979, 79.526], // south-west
+    //   [17.987, 79.534]  // north-east
+    // ]);
+    // const svgOverlay = L.imageOverlay('./map-svg.svg', [
+    //   [17.979, 79.526], // south-west
+    //   [17.990999, 79.549]  // north-east
+    // ]);
+    // svgOverlay.addTo(map);
+  
+    // Original bounds
+const originalBounds = [
+  [17.97836, 79.52131],   // South-West corner
+  [17.990999, 79.54001] // North-East corner
+];
+
+// Function to scale bounds around their center
+function scaleBounds(bounds, scaleFactor) {
+  const [[southLat, westLng], [northLat, eastLng]] = bounds;
+
+  // Find the center point
+  const centerLat = (southLat + northLat) / 2;
+  const centerLng = (westLng + eastLng) / 2;
+
+  // Compute half height and width
+  let halfHeight = (northLat - southLat) / 2;
+  let halfWidth  = (eastLng - westLng) / 2;
+
+  // Scale both equally to maintain aspect ratio
+  halfHeight *= scaleFactor;
+  halfWidth  *= scaleFactor;
+
+  // Return the new bounds
+  return [
+    [centerLat - halfHeight, centerLng - halfWidth], // new SW
+    [centerLat + halfHeight, centerLng + halfWidth]  // new NE
+  ];
+}
+
+// Example usage: make overlay 1.5x larger
+const scaledBounds = scaleBounds(originalBounds, 1.36);
+
+// Create the overlay with the new scaled bounds
+const svgOverlay = L.imageOverlay('./map-svg.svg', scaledBounds).addTo(map);
+
+
+
+    // Add sample markers (real lat/lng)
+  L.marker([17.9811, 79.5300]).addTo(map).bindPopup('Main Gate');
+  L.marker([17.9826, 79.5324]).addTo(map).bindPopup('Main Building');
+  L.marker([17.9838, 79.5295]).addTo(map).bindPopup('Library');
+
+  // Show live location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        const userMarker = L.circleMarker([lat, lng], {
+          radius: 8,
+          color: 'blue',
+          fillColor: '#30f',
+          fillOpacity: 0.8
+        }).addTo(map).bindPopup('You are here').openPopup();
+
+        map.setView([lat, lng], 18);
+      },
+      function (error) {
+        alert('Unable to retrieve your location: ' + error.message);
+      }
+    );
+  } else {
+    alert("Geolocation is not supported by your browser.");
+  }
+</script>
+
+</body>
+</html>
